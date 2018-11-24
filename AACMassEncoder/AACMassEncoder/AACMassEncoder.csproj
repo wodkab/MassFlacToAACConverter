@@ -78,6 +78,7 @@
     <Compile Include="FileItem.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SyncDirectories.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="AACMassEncoder.stop">
