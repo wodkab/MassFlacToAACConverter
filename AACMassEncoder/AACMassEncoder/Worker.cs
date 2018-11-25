@@ -58,18 +58,8 @@ namespace AACMassEncoder
                 {
                     double restCount = Actions.Count - Actions.IndexOf(lastExecutedAction);
                     Console.WriteLine("Remaining items: " + restCount);
-                    Console.WriteLine("Remaining  time: " + TimeSpan.FromSeconds(MidTimePerItem * restCount).ToString(@"dd\.hh\:mm\:ss") + " days.");
+                    Console.WriteLine("Remaining  time: " + TimeSpan.FromSeconds(TimePerItems.Average() * restCount).ToString(@"dd\.hh\:mm\:ss") + " days.");
                 }
-            }
-        }
-
-        private double MidTimePerItem
-        {
-            get
-            {
-                double sum = TimePerItems.Sum();
-
-                return sum / TimePerItems.Count;
             }
         }
 
