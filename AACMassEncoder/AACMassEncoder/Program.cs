@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -16,6 +17,11 @@ namespace AACMassEncoder
         private static string QaacFileWithPath = @"c:\temp\qaac64.exe";
         private static string StopperFile = "AACMassEncoder.stop";
 
+        const int maxActions = 2;
+
+        private static int TimeOutInMinutes = -1;
+        private static Stopwatch ElapsedTime = new Stopwatch();
+
         static void Main(string[] args)
         {
             //handle arguments
@@ -23,6 +29,7 @@ namespace AACMassEncoder
             {
                 Console.WriteLine("Usage:");
                 Console.WriteLine("AACMassEncoder.exe <input path> <output path>");
+                Console.WriteLine("-t<time out in minutes");
                 Console.WriteLine("Create a file '" + OutpuPath + StopperFile + "' to stop execution");
 
                 return;
@@ -60,7 +67,21 @@ namespace AACMassEncoder
                 return;
             }
 
+            foreach (var argument in args)
+            {
+                if (argument.StartsWith("-t") && argument.Length > 2)
+                {
+                    var result = Convert.ToInt32(argument.Replace("-t", String.Empty));
+                    if (result > 0)
+                    {
+                        TimeOutInMinutes = result;
+                        Console.WriteLine("Time out set to " + TimeOutInMinutes + " minutes.");
+                    }
+                }
+            }
+
             Console.WriteLine("Start time: " + DateTime.Now);
+            ElapsedTime.Start();
             Console.WriteLine("Create a file '" + OutpuPath + StopperFile + "' to stop execution");
 
             //get all files
@@ -74,6 +95,7 @@ namespace AACMassEncoder
                 if (workFile.Type == FileType.Jpg)
                 {
                     workFile.HandleFile();
+                    CheckElapsedTimeAndStop();
                 }
             }
 
@@ -99,11 +121,25 @@ namespace AACMassEncoder
             return new FileInfo(location.AbsolutePath).Directory.FullName + "\\";
         }
 
+        private static void CheckElapsedTimeAndStop()
+        {
+            var elapsedMinutes = ElapsedTime.Elapsed.Minutes;
+
+            if (TimeOutInMinutes > 0 && elapsedMinutes > TimeOutInMinutes)
+            {
+                Console.WriteLine("Elapsed time " + elapsedMinutes + " min ... time exceeded ... Exit!");
+                Environment.Exit(0);
+            }
+            else
+            {
+                Console.WriteLine("Elapsed time " + elapsedMinutes + "/" + TimeOutInMinutes + " min.");
+            }
+        }
+
         #region DoTheWork
 
         private static void Execute(List<Action> actions)
         {
-            const int maxActions = 32;
             var stopperFile = OutpuPath + StopperFile;
 
             //check for file and stop
@@ -149,6 +185,8 @@ namespace AACMassEncoder
 
         public static void SpawnAndWait(IEnumerable<Action> actions)
         {
+            CheckElapsedTimeAndStop();
+
             ThreadPool.SetMaxThreads(4, 4);
 
             var list = actions.ToList();
