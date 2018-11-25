@@ -19,7 +19,7 @@ namespace AACMassEncoder
         static void Main(string[] args)
         {
             //handle arguments
-            if (args.Length != 2)
+            if (args.Length < 2)
             {
                 Console.WriteLine("Usage:");
                 Console.WriteLine("AACMassEncoder.exe <input path> <output path>");
@@ -44,6 +44,11 @@ namespace AACMassEncoder
             if (!OutpuPath.EndsWith("\\"))
             {
                 OutpuPath += "\\";
+                if (!Directory.Exists(OutpuPath))
+                {
+                    Console.WriteLine("Output directory '" + OutpuPath + "' doesn't exist.");
+                    return;
+                }
             }
 
             //get absolute path to qaac
