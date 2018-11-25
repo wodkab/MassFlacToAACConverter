@@ -1,2 +1,2 @@
-# MassFlacToAACConverter
+# MassFlacToAacConverter
 MassFlacToAACConverter
