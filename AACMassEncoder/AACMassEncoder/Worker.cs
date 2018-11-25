@@ -58,7 +58,7 @@ namespace AACMassEncoder
                 {
                     double restCount = Actions.Count - Actions.IndexOf(lastExecutedAction);
                     Console.WriteLine("Remaining items: " + restCount);
-                    Console.WriteLine("Remaining  time: " + (Math.Floor(TimeSpan.FromSeconds(MidTimePerItem * restCount).TotalMinutes * 100) / 100) + " min.");
+                    Console.WriteLine("Remaining  time: " + TimeSpan.FromSeconds(MidTimePerItem * restCount).ToString(@"dd\.hh\:mm\:ss") + " days.");
                 }
             }
         }
