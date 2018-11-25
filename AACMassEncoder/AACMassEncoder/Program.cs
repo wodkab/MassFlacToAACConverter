@@ -106,9 +106,26 @@ namespace AACMassEncoder
             ElapsedTime.Start();
             Console.WriteLine("Create a file '" + StopperFilePath + "' to stop execution");
 
-            //get all files
-            var files = Directory.GetFiles(InputPath, "*", SearchOption.AllDirectories);
-            IList<FileItem> allFiles = files.Select(file => 
+            //get all files and filter out the ignored ones
+            var notIgnoredFiles = new List<string>();
+            bool toAdd = true;
+
+            foreach (var file in Directory.GetFiles(InputPath, "*", SearchOption.AllDirectories))
+            {
+                foreach (var ignorePattern in IgnorePatterns)
+                {
+                    if (file.Contains(ignorePattern))
+                    {
+                        toAdd = false;
+                        Console.WriteLine("File will be ignored: " + file);
+                    }
+                }
+
+                if(toAdd)
+                    notIgnoredFiles.Add(file);
+            }
+            
+            IList<FileItem> allFiles = notIgnoredFiles.Select(file => 
                 new FileItem(new FileInfo(file), InputPath, OutpuPath, QaacFileWithPath)).ToList();
 
             //first copy jpegs for artwork images
