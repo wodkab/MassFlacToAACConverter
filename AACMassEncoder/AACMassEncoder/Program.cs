@@ -16,7 +16,11 @@ namespace AACMassEncoder
         private static string QaacFileWithPath = @"c:\temp\qaac64.exe";
         private static string StopperFilePath = "AACMassEncoder.stop";
 
+#if DEBUG
+        const int MaxActions = 2;
+#else
         const int MaxActions = 32;
+#endif
 
         private static int TimeOutInMinutes = -1;
         private static Stopwatch ElapsedTime = new Stopwatch();
@@ -91,27 +95,18 @@ namespace AACMassEncoder
                 new FileItem(new FileInfo(file), InputPath, OutpuPath, QaacFileWithPath)).ToList();
 
             //first copy jpegs for artwork images
-            foreach (var workFile in allFiles)
+            var seqWorker = new SequentialWorker(ElapsedTime, TimeOutInMinutes, StopperFilePath)
             {
-                if (workFile.Type == FileType.Jpg)
-                {
-                    workFile.HandleFile();
-                    CheckElapsedTimeAndStop();
-                }
-            }
+                Actions = (from workFile in allFiles where workFile.Type == FileType.Jpg select (Action)workFile.HandleFile).ToList()
+            };
+            seqWorker.ExecuteActions();
 
             //do the rest
-            var actions = new List<Action>();
-            foreach (var workFile in allFiles)
-            {
-                if (workFile.Type != FileType.Jpg)
+            var parallelWorker =
+                new ParallelWorker(ElapsedTime, TimeOutInMinutes, StopperFilePath, MaxActions, 4)
                 {
-                    actions.Add(workFile.HandleFile);
-                }
-            }
-
-            var parallelWorker = new ParallelWorker(ElapsedTime, TimeOutInMinutes, StopperFilePath, MaxActions, 4);
-            parallelWorker.AddActions(actions);
+                    Actions = (from workFile in allFiles where workFile.Type != FileType.Jpg select (Action)workFile.HandleFile).ToList()
+                };
             parallelWorker.ExecuteActions();
 
             Console.WriteLine("End time: " + DateTime.Now);
@@ -121,21 +116,6 @@ namespace AACMassEncoder
         {
             var location = new Uri(Assembly.GetEntryAssembly().GetName().CodeBase);
             return new FileInfo(location.AbsolutePath).Directory.FullName + "\\";
-        }
-
-        private static void CheckElapsedTimeAndStop()
-        {
-            var elapsedMinutes = ElapsedTime.Elapsed.Minutes;
-
-            if (TimeOutInMinutes > 0 && elapsedMinutes > TimeOutInMinutes)
-            {
-                Console.WriteLine("Elapsed time " + elapsedMinutes + " min ... time exceeded ... Exit!");
-                Environment.Exit(0);
-            }
-            else
-            {
-                Console.WriteLine("Elapsed time " + elapsedMinutes + "/" + TimeOutInMinutes + " min.");
-            }
         }
     }
 }

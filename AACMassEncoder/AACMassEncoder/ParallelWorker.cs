@@ -20,21 +20,9 @@ namespace AACMassEncoder
             MaxActions = Math.Min(maxActionsPerSpawnBlock, 64);
         }
 
-        public override void AddActions(IList<Action> actions)
-        {
-            Actions = actions;
-        }
-
         public override void ExecuteActions()
         {
-            //check for file and stop
-            if (File.Exists(StopperFile))
-            {
-                Console.WriteLine("Stopper file found: '" + StopperFile + "'");
-                Console.WriteLine("Execution stopped!");
-                File.Delete(StopperFile);
-                return;
-            }
+            CheckElapsedTimeAndStop();
 
             var subActions = new List<Action>();
 
@@ -48,16 +36,6 @@ namespace AACMassEncoder
                 {
                     SpawnAndWait(subActions);
                     subActions.Clear();
-
-                    //check for file and stop
-                    if (File.Exists(StopperFile))
-                    {
-                        Console.WriteLine("Stopper file found: '" + StopperFile + "'");
-                        Console.WriteLine("Execution stopped!");
-                        File.Delete(StopperFile);
-                        break;
-                    }
-
                     subActions.Add(action);
                 }
             }

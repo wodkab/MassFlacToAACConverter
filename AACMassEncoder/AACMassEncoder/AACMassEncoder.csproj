@@ -76,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FileItem.cs" />
+    <Compile Include="SequentialWorker.cs" />
     <Compile Include="Worker.cs" />
     <Compile Include="ParallelWorker.cs" />
     <Compile Include="Program.cs" />

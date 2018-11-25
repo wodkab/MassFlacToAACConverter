@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
 namespace AACMassEncoder
 {
     public abstract class Worker
     {
-        protected IList<Action> Actions;
         protected string StopperFile;
         protected Stopwatch ElapsedTime;
         protected int TimeOutInMinutes;
@@ -16,12 +16,21 @@ namespace AACMassEncoder
             ElapsedTime = elapsedTime;
             TimeOutInMinutes = timeOutInMinutes;
             StopperFile = stopperFile;
-
-            Actions = new List<Action>();
         }
+
+        public IList<Action> Actions { get; set; }
 
         protected void CheckElapsedTimeAndStop()
         {
+            //check for file and stop
+            if (File.Exists(StopperFile))
+            {
+                Console.WriteLine("Stopper file found: '" + StopperFile + "'");
+                Console.WriteLine("Execution stopped!");
+                File.Delete(StopperFile);
+                Environment.Exit(0);
+            }
+
             var elapsedMinutes = ElapsedTime.Elapsed.Minutes;
 
             if (TimeOutInMinutes > 0 && elapsedMinutes > TimeOutInMinutes)
@@ -35,7 +44,6 @@ namespace AACMassEncoder
             }
         }
 
-        public abstract void AddActions(IList<Action> actions);
         public abstract void ExecuteActions();
     }
 }
