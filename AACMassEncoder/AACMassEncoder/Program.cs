@@ -60,7 +60,6 @@ namespace AACMassEncoder
                 }
 
                 StopperFilePath = OutpuPath + StopperFilePath;
-                Console.WriteLine("Create a file '" + StopperFilePath + "' to stop execution");
             }
 
             //get absolute path to qaac
