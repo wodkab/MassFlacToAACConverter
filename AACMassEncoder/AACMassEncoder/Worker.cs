@@ -10,12 +10,14 @@ namespace AACMassEncoder
         protected string StopperFile;
         protected Stopwatch ElapsedTime;
         protected int TimeOutInMinutes;
+        private IList<double> TimePerItems;
 
         protected Worker(Stopwatch elapsedTime, int timeOutInMinutes, string stopperFile)
         {
             ElapsedTime = elapsedTime;
             TimeOutInMinutes = timeOutInMinutes;
             StopperFile = stopperFile;
+            TimePerItems = new List<double>();
         }
 
         public IList<Action> Actions { get; set; }
@@ -49,13 +51,29 @@ namespace AACMassEncoder
             if(neededTimeSpan.Seconds >0 )
             {
                 double timePerItem = (double)workedItemCount / neededTimeSpan.Seconds;
+                TimePerItems.Add(timePerItem);
 
                 if (timePerItem > 0.0)
                 {
                     double restCount = Actions.Count - Actions.IndexOf(lastExecutedAction);
                     Console.WriteLine("Remaining items: " + restCount);
-                    Console.WriteLine("Remaining  time: " + (Math.Floor(TimeSpan.FromSeconds(timePerItem * restCount).TotalMinutes * 100) / 100) + " min.");
+                    Console.WriteLine("Remaining  time: " + (Math.Floor(TimeSpan.FromSeconds(MidTimePerItem * restCount).TotalMinutes * 100) / 100) + " min.");
                 }
+            }
+        }
+
+        private double MidTimePerItem
+        {
+            get
+            {
+                double sum = 0;
+
+                foreach (var timePerItem in TimePerItems)
+                {
+                    sum += timePerItem;
+                }
+
+                return sum / TimePerItems.Count;
             }
         }
 
