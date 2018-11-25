@@ -17,7 +17,7 @@ namespace AACMassEncoder
         private static string QaacFileWithPath = @"c:\temp\qaac64.exe";
         private static string StopperFile = "AACMassEncoder.stop";
 
-        const int maxActions = 2;
+        const int MaxActions = 32;
 
         private static int TimeOutInMinutes = -1;
         private static Stopwatch ElapsedTime = new Stopwatch();
@@ -155,7 +155,7 @@ namespace AACMassEncoder
 
             foreach (var action in actions)
             {
-                if (subActions.Count < maxActions)
+                if (subActions.Count < MaxActions)
                 {
                     subActions.Add(action);
                 }
