@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 
 namespace AACMassEncoder
 {
@@ -13,9 +12,9 @@ namespace AACMassEncoder
     {
         private static string InputPath = @"c:\Input\";
         private static string OutpuPath = @"c:\Output\";
-        private static string RelQaacPath = @"\qaac\qaac64.exe";
+        private static string RelativeQaacPath = @"\qaac\qaac64.exe";
         private static string QaacFileWithPath = @"c:\temp\qaac64.exe";
-        private static string StopperFile = "AACMassEncoder.stop";
+        private static string StopperFilePath = "AACMassEncoder.stop";
 
         const int MaxActions = 32;
 
@@ -30,7 +29,6 @@ namespace AACMassEncoder
                 Console.WriteLine("Usage:");
                 Console.WriteLine("AACMassEncoder.exe <input path> <output path>");
                 Console.WriteLine("-t<time out in minutes");
-                Console.WriteLine("Create a file '" + OutpuPath + StopperFile + "' to stop execution");
 
                 return;
             }
@@ -56,10 +54,13 @@ namespace AACMassEncoder
                     Console.WriteLine("Output directory '" + OutpuPath + "' doesn't exist.");
                     return;
                 }
+
+                StopperFilePath = OutpuPath + StopperFilePath;
+                Console.WriteLine("Create a file '" + StopperFilePath + "' to stop execution");
             }
 
             //get absolute path to qaac
-            QaacFileWithPath = GetExecutingDirectoryName() + RelQaacPath;
+            QaacFileWithPath = GetExecutingDirectoryName() + RelativeQaacPath;
 
             if (!File.Exists(QaacFileWithPath))
             {
@@ -82,7 +83,7 @@ namespace AACMassEncoder
 
             Console.WriteLine("Start time: " + DateTime.Now);
             ElapsedTime.Start();
-            Console.WriteLine("Create a file '" + OutpuPath + StopperFile + "' to stop execution");
+            Console.WriteLine("Create a file '" + StopperFilePath + "' to stop execution");
 
             //get all files
             var files = Directory.GetFiles(InputPath, "*", SearchOption.AllDirectories);
@@ -101,7 +102,6 @@ namespace AACMassEncoder
 
             //do the rest
             var actions = new List<Action>();
-
             foreach (var workFile in allFiles)
             {
                 if (workFile.Type != FileType.Jpg)
@@ -110,9 +110,11 @@ namespace AACMassEncoder
                 }
             }
 
-            Execute(actions);
+            var parallelWorker = new ParallelWorker(ElapsedTime, TimeOutInMinutes, StopperFilePath, MaxActions, 4);
+            parallelWorker.AddActions(actions);
+            parallelWorker.ExecuteActions();
 
-            Console.WriteLine("Start time: " + DateTime.Now);
+            Console.WriteLine("End time: " + DateTime.Now);
         }
 
         private static string GetExecutingDirectoryName()
@@ -135,74 +137,5 @@ namespace AACMassEncoder
                 Console.WriteLine("Elapsed time " + elapsedMinutes + "/" + TimeOutInMinutes + " min.");
             }
         }
-
-        #region DoTheWork
-
-        private static void Execute(List<Action> actions)
-        {
-            var stopperFile = OutpuPath + StopperFile;
-
-            //check for file and stop
-            if (File.Exists(stopperFile))
-            {
-                Console.WriteLine("Stopper file found: '" + stopperFile + "'");
-                Console.WriteLine("Execution stopped!");
-                File.Delete(stopperFile);
-                return;
-            }
-
-            var subActions = new List<Action>();
-
-            foreach (var action in actions)
-            {
-                if (subActions.Count < MaxActions)
-                {
-                    subActions.Add(action);
-                }
-                else
-                {
-                    SpawnAndWait(subActions);
-                    subActions.Clear();
-
-                    //check for file and stop
-                    if (File.Exists(stopperFile))
-                    {
-                        Console.WriteLine("Stopper file found: '" + stopperFile + "'");
-                        Console.WriteLine("Execution stopped!");
-                        File.Delete(stopperFile);
-                        break;
-                    }
-
-                    subActions.Add(action);
-                }
-            }
-
-            if (subActions?.Count > 0)
-            {
-                SpawnAndWait(subActions);
-            }
-        }
-
-        public static void SpawnAndWait(IEnumerable<Action> actions)
-        {
-            CheckElapsedTimeAndStop();
-
-            ThreadPool.SetMaxThreads(4, 4);
-
-            var list = actions.ToList();
-            var handles = new ManualResetEvent[list.Count];
-            for (var i = 0; i < list.Count; i++)
-            {
-                handles[i] = new ManualResetEvent(false);
-                var currentAction = list[i];
-                var currentHandle = handles[i];
-                Action wrappedAction = () => { try { currentAction(); } finally { currentHandle.Set(); } };
-                ThreadPool.QueueUserWorkItem(x => wrappedAction());
-            }
-
-            WaitHandle.WaitAll(handles);
-        }
-
-        #endregion
     }
 }
