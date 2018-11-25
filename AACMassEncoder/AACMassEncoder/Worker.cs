@@ -51,13 +51,14 @@ namespace AACMassEncoder
         {
             if(neededTimeSpan.Seconds >0 )
             {
-                double timePerItem = (double)workedItemCount / neededTimeSpan.Seconds;
+                double timePerItem = (double)neededTimeSpan.Seconds / workedItemCount;
                 TimePerItems.Add(timePerItem);
 
                 if (timePerItem > 0.0)
                 {
                     double restCount = Actions.Count - Actions.IndexOf(lastExecutedAction);
                     Console.WriteLine("Remaining items: " + restCount);
+                    Console.WriteLine("Time needed per item: " + TimePerItems.Average() + " sec.");
                     Console.WriteLine("Remaining  time: " + TimeSpan.FromSeconds(TimePerItems.Average() * restCount).ToString(@"dd\.hh\:mm\:ss") + " days.");
                 }
             }
