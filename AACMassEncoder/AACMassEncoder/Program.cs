@@ -16,6 +16,7 @@ namespace AACMassEncoder
         private static string QaacFileWithPath = @"c:\temp\qaac64.exe";
         private static string StopperFilePath = "AACMassEncoder.stop";
 
+        private static IEnumerable<string> IgnorePatterns = new List<string>();
 #if DEBUG
         const int MaxActions = 2;
 #else
@@ -32,7 +33,8 @@ namespace AACMassEncoder
             {
                 Console.WriteLine("Usage:");
                 Console.WriteLine("AACMassEncoder.exe <input path> <output path>");
-                Console.WriteLine("-t<time out in minutes");
+                Console.WriteLine("-t<time out in minutes>");
+                Console.WriteLine("-t<ignor1/ignor2_no_blank_allowed/ignore_3>");
 
                 return;
             }
@@ -80,6 +82,22 @@ namespace AACMassEncoder
                     {
                         TimeOutInMinutes = result;
                         Console.WriteLine("Time out set to " + TimeOutInMinutes + " minutes.");
+                    }
+                }
+            }
+
+            foreach (var argument in args)
+            {
+                if (argument.StartsWith("-i") && argument.Length > 2)
+                {
+                    var result = argument.Replace("-i", String.Empty);
+                    if (result.Length > 0)
+                    {
+                        IgnorePatterns = result.Split(new char[] {'/'}, StringSplitOptions.RemoveEmptyEntries).ToList();
+                        foreach (var ignorePattern in IgnorePatterns)
+                        {
+                            Console.WriteLine("Ignore pattern: " + ignorePattern);
+                        }
                     }
                 }
             }
