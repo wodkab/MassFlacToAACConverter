@@ -48,11 +48,19 @@ namespace AACMassEncoder
 
         private void SpawnAndWait(IEnumerable<Action> actions)
         {
+            var list = actions.ToList();
+
+            if (list.Count > 64)
+            {
+                Console.WriteLine("Max count of actions greater than 64");
+                Environment.Exit(1);
+            }
+
             CheckElapsedTimeAndStop();
+            var start = ElapsedTime.Elapsed;
 
             ThreadPool.SetMaxThreads(MaxThreads, MaxThreads);
 
-            var list = actions.ToList();
             var handles = new ManualResetEvent[list.Count];
             for (var i = 0; i < list.Count; i++)
             {
@@ -64,6 +72,8 @@ namespace AACMassEncoder
             }
 
             WaitHandle.WaitAll(handles);
+
+            CalculateRestTime(list.Count, ElapsedTime.Elapsed - start, list.Last());
         }
     }
 }

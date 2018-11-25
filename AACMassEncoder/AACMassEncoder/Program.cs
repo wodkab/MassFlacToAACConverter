@@ -19,7 +19,7 @@ namespace AACMassEncoder
 #if DEBUG
         const int MaxActions = 2;
 #else
-        const int MaxActions = 32;
+        const int MaxActions = 64;
 #endif
 
         private static int TimeOutInMinutes = -1;

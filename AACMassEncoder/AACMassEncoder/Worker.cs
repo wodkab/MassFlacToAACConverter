@@ -44,6 +44,21 @@ namespace AACMassEncoder
             }
         }
 
+        protected void CalculateRestTime(int workedItemCount, TimeSpan neededTimeSpan, Action lastExecutedAction)
+        {
+            if(neededTimeSpan.Seconds >0 )
+            {
+                double timePerItem = (double)workedItemCount / neededTimeSpan.Seconds;
+
+                if (timePerItem > 0.0)
+                {
+                    double restCount = Actions.Count - Actions.IndexOf(lastExecutedAction);
+                    Console.WriteLine("Remaining items: " + restCount);
+                    Console.WriteLine("Remaining  time: " + (Math.Floor(TimeSpan.FromSeconds(timePerItem * restCount).TotalMinutes * 100) / 100) + " min.");
+                }
+            }
+        }
+
         public abstract void ExecuteActions();
     }
 }
