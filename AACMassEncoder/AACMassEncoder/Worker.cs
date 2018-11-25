@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace AACMassEncoder
 {
@@ -66,12 +67,7 @@ namespace AACMassEncoder
         {
             get
             {
-                double sum = 0;
-
-                foreach (var timePerItem in TimePerItems)
-                {
-                    sum += timePerItem;
-                }
+                double sum = TimePerItems.Sum();
 
                 return sum / TimePerItems.Count;
             }
