@@ -107,6 +107,7 @@ namespace AACMassEncoder
             Console.WriteLine("Create a file '" + StopperFilePath + "' to stop execution");
 
             //get all files and filter out the ignored ones
+            //todo: use Directory.enumarate() and do there the filtering
             var notIgnoredFiles = new List<string>();
             bool toAdd = true;
 
@@ -123,10 +124,19 @@ namespace AACMassEncoder
 
                 if(toAdd)
                     notIgnoredFiles.Add(file);
+
+                //reset
+                toAdd = true;
             }
             
             IList<FileItem> allFiles = notIgnoredFiles.Select(file => 
                 new FileItem(new FileInfo(file), InputPath, OutpuPath, QaacFileWithPath)).ToList();
+
+            Console.WriteLine(allFiles.Count + " files have to be processed!");
+            foreach (var fileItem in allFiles)
+            {
+                Console.WriteLine(fileItem.SourceFile.FullName);
+            }
 
             //first copy jpegs for artwork images
             var seqWorker = new SequentialWorker(ElapsedTime, TimeOutInMinutes, StopperFilePath)
