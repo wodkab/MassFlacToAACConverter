@@ -107,29 +107,9 @@ namespace AACMassEncoder
             Console.WriteLine("Create a file '" + StopperFilePath + "' to stop execution");
 
             //get all files and filter out the ignored ones
-            //todo: use Directory.enumarate() and do there the filtering
-            var notIgnoredFiles = new List<string>();
-            bool toAdd = true;
-
-            foreach (var file in Directory.GetFiles(InputPath, "*", SearchOption.AllDirectories))
-            {
-                foreach (var ignorePattern in IgnorePatterns)
-                {
-                    if (file.Contains(ignorePattern))
-                    {
-                        toAdd = false;
-                        Console.WriteLine("File will be ignored: " + file);
-                    }
-                }
-
-                if(toAdd)
-                    notIgnoredFiles.Add(file);
-
-                //reset
-                toAdd = true;
-            }
+            var files = Directory.EnumerateDirectories(InputPath, "*", SearchOption.AllDirectories).Where(file => !FileNameContainsIgnorePattern(file)).ToList();
             
-            IList<FileItem> allFiles = notIgnoredFiles.Select(file => 
+            IList<FileItem> allFiles = files.Select(file => 
                 new FileItem(new FileInfo(file), InputPath, OutpuPath, QaacFileWithPath)).ToList();
 
             Console.WriteLine(allFiles.Count + " files have to be processed!");
@@ -139,21 +119,41 @@ namespace AACMassEncoder
             }
 
             //first copy jpegs for artwork images
-            var seqWorker = new SequentialWorker(ElapsedTime, TimeOutInMinutes, StopperFilePath)
+            var jpegWorker = new SequentialWorker(ElapsedTime, TimeOutInMinutes, StopperFilePath)
             {
                 Actions = (from workFile in allFiles where workFile.Type == FileType.Jpg select (Action)workFile.HandleFile).ToList()
             };
-            seqWorker.ExecuteActions();
+            jpegWorker.ExecuteActions();
+
+            //do the flac to m4a
+            var flacWorker = new ParallelWorker(ElapsedTime, TimeOutInMinutes, StopperFilePath, MaxActions, 4)
+            {
+                Actions = (from workFile in allFiles where workFile.Type == FileType.Flac select (Action)workFile.HandleFile).ToList()
+            };
+            flacWorker.ExecuteActions();
+
+            //do the mp3 copy and artwork
+            var mp3Worker = new SequentialWorker(ElapsedTime, TimeOutInMinutes, StopperFilePath)
+            {
+                Actions = (from workFile in allFiles where workFile.Type == FileType.Mp3 || workFile.Type == FileType.M4a select (Action)workFile.HandleFile).ToList()
+
+            };
+            mp3Worker.ExecuteActions();
 
             //do the rest
-            var parallelWorker =
-                new ParallelWorker(ElapsedTime, TimeOutInMinutes, StopperFilePath, MaxActions, 4)
-                {
-                    Actions = (from workFile in allFiles where workFile.Type != FileType.Jpg select (Action)workFile.HandleFile).ToList()
-                };
-            parallelWorker.ExecuteActions();
+            var restWorker = new SequentialWorker(ElapsedTime, TimeOutInMinutes, StopperFilePath)
+            {
+                Actions = (from workFile in allFiles where workFile.Type == FileType.Other select (Action)workFile.HandleFile).ToList()
+
+            };
+            restWorker.ExecuteActions();
 
             Console.WriteLine("End time: " + DateTime.Now);
+        }
+
+        private static bool FileNameContainsIgnorePattern(string file)
+        {
+            return IgnorePatterns.Any(ignorePattern => file.Contains(ignorePattern));
         }
 
         private static string GetExecutingDirectoryName()
