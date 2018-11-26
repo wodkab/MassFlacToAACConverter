@@ -107,7 +107,7 @@ namespace AACMassEncoder
             Console.WriteLine("Create a file '" + StopperFilePath + "' to stop execution");
 
             //get all files and filter out the ignored ones
-            var files = Directory.EnumerateDirectories(InputPath, "*", SearchOption.AllDirectories).Where(file => !FileNameContainsIgnorePattern(file)).ToList();
+            var files = Directory.EnumerateFiles(InputPath, "*", SearchOption.AllDirectories).Where(file => !FileNameContainsIgnorePattern(file)).ToList();
             
             IList<FileItem> allFiles = files.Select(file => 
                 new FileItem(new FileInfo(file), InputPath, OutpuPath, QaacFileWithPath)).ToList();
