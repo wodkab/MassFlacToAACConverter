@@ -132,7 +132,7 @@ namespace AACMassEncoder
             };
             flacWorker.ExecuteActions();
 
-            //do the mp3 copy and artwork
+            //do the mp3/m4a copy and artwork
             var mp3Worker = new SequentialWorker(ElapsedTime, TimeOutInMinutes, StopperFilePath)
             {
                 Actions = (from workFile in allFiles where workFile.Type == FileType.Mp3 || workFile.Type == FileType.M4a select (Action)workFile.HandleFile).ToList()
