@@ -34,16 +34,16 @@ namespace AACMassEncoder
                 Environment.Exit(0);
             }
 
-            var elapsedMinutes = ElapsedTime.Elapsed.Minutes;
+            var elapsedMinutes = ElapsedTime.Elapsed.TotalMinutes;
 
             if (TimeOutInMinutes > 0 && elapsedMinutes > TimeOutInMinutes)
             {
-                Console.WriteLine("Elapsed time " + elapsedMinutes + " min ... time exceeded ... Exit!");
+                Console.WriteLine("Elapsed time " + (int)elapsedMinutes + " min ... time exceeded ... Exit!");
                 Environment.Exit(0);
             }
             else
             {
-                Console.WriteLine("Elapsed time " + elapsedMinutes + "/" + TimeOutInMinutes + " min.");
+                Console.WriteLine("Elapsed time " + (int)elapsedMinutes + "/" + TimeOutInMinutes + " min.");
             }
         }
 
